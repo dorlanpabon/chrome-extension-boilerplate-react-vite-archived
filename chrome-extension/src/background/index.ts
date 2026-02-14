@@ -1,4 +1,5 @@
 import 'webextension-polyfill';
+import { getConfig } from './config';
 import { exampleThemeStorage } from '@extension/storage';
 
 exampleThemeStorage.get().then(theme => {
@@ -37,9 +38,6 @@ const recordingState: RecordingState = {
   captions: [],
   participants: new Map(),
 };
-
-// API endpoint configuration (should be configurable)
-const API_ENDPOINT = 'https://your-api-endpoint.com/recordings';
 
 // Message handlers
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -257,7 +255,8 @@ const handleParticipantInfo = (data: { participants: Array<{ id: string; name: s
 // Send data to API endpoint
 const sendToEndpoint = async (data: Record<string, unknown>): Promise<void> => {
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const config = await getConfig();
+    const response = await fetch(config.apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
