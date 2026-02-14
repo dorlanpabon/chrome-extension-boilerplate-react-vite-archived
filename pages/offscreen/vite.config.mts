@@ -1,19 +1,23 @@
 import { defineConfig } from 'vite';
 import { withPageConfig } from '@extension/vite-config';
+import { resolve } from 'node:path';
+
+const rootDir = resolve(import.meta.dirname);
+const outDir = resolve(rootDir, '..', '..', 'dist', 'offscreen');
 
 export default defineConfig(
   withPageConfig({
     resolve: {
       alias: {
-        '@src': new URL('./src', import.meta.url).pathname,
+        '@src': resolve(rootDir, 'src'),
       },
     },
-    publicDir: 'public',
+    publicDir: resolve(rootDir, 'public'),
     build: {
-      outDir: 'dist',
+      outDir,
       rollupOptions: {
         input: {
-          offscreen: new URL('./index.html', import.meta.url).pathname,
+          offscreen: resolve(rootDir, 'index.html'),
         },
       },
     },
