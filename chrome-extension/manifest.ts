@@ -70,6 +70,7 @@ const manifest = {
       matches: ['https://meet.google.com/*'],
       js: ['content/meet.iife.js'],
       run_at: 'document_start',
+      world: 'MAIN',
     },
     {
       matches: ['http://*/*', 'https://*/*', '<all_urls>'],
