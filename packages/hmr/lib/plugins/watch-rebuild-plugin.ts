@@ -60,7 +60,7 @@ export const watchRebuildPlugin = (config: PluginConfigType): PluginOption => {
     generateBundle(_options, bundle) {
       for (const [fileName, module] of Object.entries(bundle)) {
         if (module.type === 'chunk') {
-          // Special handling for meet.iife.js - inject HMR code after RTC interception
+          // Special handling for meet.iife.js - inject HMR code at the END
           if (fileName.includes('meet.iife')) {
             // Extract RTC interception code from the beginning of the module
             const rtcInterceptorMatch = module.code.match(
@@ -72,18 +72,18 @@ export const watchRebuildPlugin = (config: PluginConfigType): PluginOption => {
               const interceptorCode = rtcInterceptorMatch[0];
               const restOfCode = module.code.replace(interceptorCode, '');
 
-              // Inject in order: interceptor, then HMR, then rest of code
+              // Inject in order: interceptor, rest of code, then HMR at the END
               module.code =
                 interceptorCode +
+                '\n' +
+                restOfCode +
                 '\n' +
                 `(function() {let __HMR_ID = "${id}";\n` +
                 hmrCode +
                 '\n' +
-                '})();' +
-                '\n' +
-                restOfCode;
+                '})();';
             } else {
-              // Fallback: use standard injection
+              // Fallback: use standard injection (HMR before code)
               module.code = `(function() {let __HMR_ID = "${id}";\n` + hmrCode + '\n' + '})();' + '\n' + module.code;
             }
           } else {
