@@ -31,7 +31,17 @@ const manifest = {
   version: packageJson.version,
   description: '__MSG_extensionDescription__',
   host_permissions: ['<all_urls>'],
-  permissions: ['storage', 'scripting', 'tabs', 'notifications', 'sidePanel'],
+  permissions: [
+    'storage',
+    'scripting',
+    'tabs',
+    'notifications',
+    'sidePanel',
+    'tabCapture',
+    'offscreen',
+    'webRequest',
+    'webRequestBlocking',
+  ],
   options_page: 'options/index.html',
   background: {
     service_worker: 'background.js',
@@ -55,6 +65,12 @@ const manifest = {
     {
       matches: ['https://example.com/*'],
       js: ['content/example.iife.js'],
+    },
+    {
+      matches: ['https://meet.google.com/*'],
+      js: ['content/meet.iife.js'],
+      run_at: 'document_start',
+      world: 'MAIN',
     },
     {
       matches: ['http://*/*', 'https://*/*', '<all_urls>'],

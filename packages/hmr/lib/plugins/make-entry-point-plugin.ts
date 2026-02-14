@@ -59,6 +59,14 @@ export const makeEntryPointPlugin = (): PluginOption => ({
           safeWriteFileSync(resolve(outputDir, newFileName), module.code);
           const newFileNameBase = basename(newFileName);
 
+          // Special handling for meet.iife to avoid async loading delay
+          // meet.iife needs synchronous execution for RTCPeerConnection interception
+          if (fileName.includes('meet.iife')) {
+            // Don't replace code - keep it inline for immediate execution
+            // The _dev.js file is still created for debugging but not used
+            break;
+          }
+
           if (IS_FIREFOX) {
             const contentDirectory = extractContentDir(outputDir);
             module.code = `import(browser.runtime.getURL("${contentDirectory}/${newFileNameBase}"));`;

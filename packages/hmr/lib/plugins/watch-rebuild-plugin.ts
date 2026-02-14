@@ -58,9 +58,38 @@ export const watchRebuildPlugin = (config: PluginConfigType): PluginOption => {
       ws.send(MessageInterpreter.send({ type: BUILD_COMPLETE, id }));
     },
     generateBundle(_options, bundle) {
-      for (const module of Object.values(bundle)) {
+      for (const [fileName, module] of Object.entries(bundle)) {
         if (module.type === 'chunk') {
-          module.code = `(function() {let __HMR_ID = "${id}";\n` + hmrCode + '\n' + '})();' + '\n' + module.code;
+          // Special handling for meet.iife.js - inject HMR code at the END
+          if (fileName.includes('meet.iife')) {
+            // Extract RTC interception code from the beginning of the module
+            const rtcInterceptorMatch = module.code.match(
+              /\/\/ CRITICAL:[\s\S]*?console\.log\('\[CEB\] RTCPeerConnection intercepted[\s\S]*?\n/,
+            );
+
+            if (rtcInterceptorMatch) {
+              // Remove the interceptor from its current position
+              const interceptorCode = rtcInterceptorMatch[0];
+              const restOfCode = module.code.replace(interceptorCode, '');
+
+              // Inject in order: interceptor, rest of code, then HMR at the END
+              module.code =
+                interceptorCode +
+                '\n' +
+                restOfCode +
+                '\n' +
+                `(function() {let __HMR_ID = "${id}";\n` +
+                hmrCode +
+                '\n' +
+                '})();';
+            } else {
+              // Fallback: use standard injection (HMR before code)
+              module.code = `(function() {let __HMR_ID = "${id}";\n` + hmrCode + '\n' + '})();' + '\n' + module.code;
+            }
+          } else {
+            // Standard HMR injection for other modules
+            module.code = `(function() {let __HMR_ID = "${id}";\n` + hmrCode + '\n' + '})();' + '\n' + module.code;
+          }
         }
       }
     },
