@@ -76,22 +76,7 @@ window.__CEB_OriginalRTCPeerConnection = OriginalRTCPeerConnection;
 console.log('[CEB] RTCPeerConnection intercepted before potential freeze');
 
 // ═══════════════════════════════════════════════════════════════
-// PARTE 2: CÓDIGO HMR (IIFE - NO BLOQUEA)
-// ═══════════════════════════════════════════════════════════════
-
-(function() {
-  let __HMR_ID = "...";
-  
-  // Código HMR para hot reload en desarrollo
-  // Envuelto en Promise para no bloquear
-  void Promise.resolve().then(() => {
-    const ws = new WebSocket('ws://localhost:8081');
-    // ...
-  });
-})();
-
-// ═══════════════════════════════════════════════════════════════
-// PARTE 3: RESTO DEL CONTENT SCRIPT (IIFE)
+// PARTE 2: RESTO DEL CONTENT SCRIPT (IIFE - SEGUNDA)
 // ═══════════════════════════════════════════════════════════════
 
 (function() {
@@ -109,6 +94,21 @@ console.log('[CEB] RTCPeerConnection intercepted before potential freeze');
   };
   
   // ... resto de la lógica del content script
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// PARTE 3: CÓDIGO HMR (IIFE - AL FINAL, ÚLTIMA)
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  let __HMR_ID = "...";
+  
+  // Código HMR para hot reload en desarrollo
+  // Envuelto en Promise para no bloquear
+  void Promise.resolve().then(() => {
+    const ws = new WebSocket('ws://localhost:8081');
+    // ...
+  });
 })();
 ```
 
@@ -157,13 +157,15 @@ console.log('[CEB] RTCPeerConnection intercepted before potential freeze');
                    ▼
 ┌─────────────────────────────────────────────────────┐
 │ TIEMPO: T2                                          │
-│ HMR code ejecuta (async, no bloquea)               │
+│ Resto del content script ejecuta                    │
+│ ✅ Caption interception ready                       │
+│ ✅ Participant tracking ready                       │
 └──────────────────┬──────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────┐
 │ TIEMPO: T3                                          │
-│ Resto del content script ejecuta                    │
+│ HMR code ejecuta (async, no bloquea) - AL FINAL    │
 └──────────────────┬──────────────────────────────────┘
                    │
                    ▼
@@ -191,8 +193,8 @@ window.RTCPeerConnection = class extends OriginalRTCPeerConnection { ... };
 // En watch-rebuild-plugin.ts:
 if (fileName.includes('meet.iife')) {
   // Extrae interceptor del código compilado
-  // Inyecta en orden: interceptor → HMR → resto
-  module.code = interceptorCode + hmrCode + restOfCode;
+  // Inyecta en orden: interceptor → resto → HMR AL FINAL
+  module.code = interceptorCode + restOfCode + hmrCode;
 }
 ```
 
